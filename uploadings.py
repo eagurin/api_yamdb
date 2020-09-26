@@ -32,6 +32,7 @@ def main():
             csv_reader(key, f_obj, cursor, 1)
 
     conn.commit()
+    conn.close()
 
 
 if __name__ == '__main__':

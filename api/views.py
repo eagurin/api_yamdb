@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
+##from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, mixins, status, viewsets
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -33,6 +33,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
-def test:
+def test():
     afas = 0
     pass
