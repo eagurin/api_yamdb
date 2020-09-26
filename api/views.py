@@ -34,4 +34,5 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
 
 def test:
-  pass
+    afas = 0
+    pass
