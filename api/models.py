@@ -26,7 +26,7 @@ class Genre(models.Model):
     slug = models.SlugField(max_length=50, verbose_name="slug", unique=True)
 
 
-class Reviews(models.model):
+class Reviews(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
         related_name="review_title")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
@@ -40,7 +40,7 @@ class Reviews(models.model):
         auto_now_add=True)
 
 
-class Comments(models.model):
+class Comments(models.Model):
     review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
         related_name="comment_review")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
