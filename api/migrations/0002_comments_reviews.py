@@ -18,21 +18,21 @@ class Migration(migrations.Migration):
             name='Reviews',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='review_title', to='api.Title')),
                 ('text', models.TextField(verbose_name='Отзыв')),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='review_author', to=settings.AUTH_USER_MODEL)),
                 ('score', models.IntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)], verbose_name='Оценка')),
                 ('pub_date', models.DateTimeField(auto_now_add=True, verbose_name='date published')),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='review_author', to=settings.AUTH_USER_MODEL)),
-                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='review_title', to='api.Title')),
             ],
         ),
         migrations.CreateModel(
             name='Comments',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField(verbose_name='Комментарий')),
-                ('pub_date', models.DateTimeField(auto_now_add=True, verbose_name='date published')),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comment_author', to=settings.AUTH_USER_MODEL)),
                 ('review', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comment_review', to='api.Reviews')),
+                ('text', models.TextField(verbose_name='Комментарий')),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comment_author', to=settings.AUTH_USER_MODEL)),
+                ('pub_date', models.DateTimeField(auto_now_add=True, verbose_name='date published')),
             ],
         ),
     ]
