@@ -1,9 +1,5 @@
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, mixins, status, viewsets
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.response import Response
+from rest_framework import filters, mixins, viewsets
+from rest_framework.pagination import PageNumberPagination
 from api.serializers import (GenreSerializer, CategorySerializer,
                              TitleSerializer)
 from .models import Genre, Category, Title
@@ -18,6 +14,8 @@ class GenreViewSet(mixins.CreateModelMixin,
     serializer_class = GenreSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['=name']
+    lookup_field = 'slug'
+    pagination_class = PageNumberPagination
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -26,12 +24,14 @@ class CategoryViewSet(mixins.CreateModelMixin,
                       viewsets.GenericViewSet
                       ):
     queryset = Category.objects.all()
-    serializer_class = GenreSerializer
+    serializer_class = CategorySerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=name']
+    lookup_field = 'slug'
+    pagination_class = PageNumberPagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-
-def test:
-  pass
+    pagination_class = PageNumberPagination
