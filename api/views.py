@@ -33,7 +33,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
 
-
 class ReviewsViewSet(viewsets.ModelViewSet):
     queryset = Reviews.objects.all()
     serializer_class = ReviewsSerializer
@@ -52,8 +51,3 @@ class CommentsViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
         comments = review.comment_review.all()
         return comments
-
-
-def test():
-    afas = 0
-    pass
