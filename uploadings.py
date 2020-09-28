@@ -14,6 +14,7 @@ def csv_reader(table, file_obj, cursor, index_model):
         if index_model == 1:
             values = ",".join(["?" for i in range(0, len(row))])
             sql = f'insert into {table} values({values})'
+            #print(sql)
             cursor.execute(sql, row)
 
 
@@ -25,6 +26,8 @@ def main():
         'api_genre': 'data/genre.csv',
         'api_title': 'data/titles.csv',
         'api_category': 'data/category.csv',
+        'api_reviews': 'data/review.csv',
+        'api_comments': 'data/comments.csv',
     }
 
     for key, value in tables.items():
