@@ -72,6 +72,6 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin]
     serializer_class = UserSerializer
     lookup_field = 'username'
