@@ -1,8 +1,10 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 class Category(models.Model):
     name = models.CharField(max_length=150, verbose_name="Категория")
@@ -28,29 +30,45 @@ class Genre(models.Model):
 
 class Reviews(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
-        related_name="review_title")
+                              related_name="review_title")
     text = models.TextField(verbose_name="Отзыв")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-        related_name="review_author")
+                               related_name="review_author")
     score = models.IntegerField(
-        validators =[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Оценка"
     )
-    pub_date = models.DateTimeField(verbose_name="date published", 
-        auto_now_add=True)
+    pub_date = models.DateTimeField(verbose_name="date published",
+                                    auto_now_add=True)
 
 
 class Comments(models.Model):
     review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
-        related_name="comment_review")
+                               related_name="comment_review")
     text = models.TextField(verbose_name="Комментарий")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-        related_name="comment_author") 
-    pub_date = models.DateTimeField(verbose_name="date published", 
-        auto_now_add=True)     
+                               related_name="comment_author")
+    pub_date = models.DateTimeField(verbose_name="date published",
+                                    auto_now_add=True)
 
 
-    
+class User(AbstractUser):
 
+    class UserRole:
+        USER = 'user'
+        ADMIN = 'admin'
+        MODERATOR = 'moderator'
+        choices = [
+            (USER, 'user'),
+            (ADMIN, 'admin'),
+            (MODERATOR, 'moderator'),
+        ]
 
+    email = models.EmailField(blank=False, unique=True)
+    bio = models.TextField(blank=True)
+    role = models.CharField(
+        max_length=25, choices=UserRole.choices, default=UserRole.USER)
+    confirmation_code = models.CharField(max_length=100, blank=True, )
 
+    def __str__(self):
+        return self.username
