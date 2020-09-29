@@ -1,4 +1,14 @@
+import random
 from rest_framework import serializers
+from rest_framework.exceptions import (
+    ValidationError,
+    PermissionDenied,
+    AuthenticationFailed,
+)
+
+from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Category, Title, Genre, Reviews, Comments, User
 
@@ -40,7 +50,6 @@ class CommentsSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = '__all__'
+        fields = ("first_name", "last_name", "username", "bio", "email", "role")
         model = User

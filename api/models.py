@@ -1,25 +1,22 @@
+from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.contrib.auth.models import PermissionsMixin
 from django.conf import settings
 
-class User(AbstractUser):
-    
-    class UserRole:
-        USER = 'user'
-        ADMIN = 'admin'
-        MODERATOR = 'moderator'
-        choices = [
-            (USER, 'user'),
-            (ADMIN, 'admin'),
-            (MODERATOR, 'moderator'),
-        ]
 
+
+class User(AbstractUser):
+    USER_ROLES = (
+        ("user", "user"),
+        ("moderator", "moderator"),
+        ("admin", "admin"),
+    )
     email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
-        max_length=25, choices=UserRole.choices, default=UserRole.USER)
-    confirmation_code = models.CharField(max_length=100, blank=True, )
+        max_length=25, choices=USER_ROLES, default="user")
+    confirmation_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
 
     def __str__(self):
         return self.username
