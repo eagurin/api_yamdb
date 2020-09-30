@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from api.serializers import (GenreSerializer, CategorySerializer,
                              TitleSerializer, ReviewsSerializer, CommentsSerializer)
+from .filters import TitleFilter
 from .models import Genre, Category, Title, Reviews, Comments
 
 
@@ -42,6 +43,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = PageNumberPagination
+    #filterset_class = TitleFilter
+
+    def perform_create(self, serializer):
+        category = Category.objects.get(slug=self.request.data.get("category"))
+        genres = Genre.objects.filter(slug__in=self.request.data.getlist("genre"))
+
+        serializer.save(category=category, genre=genres)
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
