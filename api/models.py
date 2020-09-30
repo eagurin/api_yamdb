@@ -1,8 +1,26 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import PermissionsMixin
+from django.conf import settings
 
-User = get_user_model()
+
+
+class User(AbstractUser):
+    USER_ROLES = (
+        ("user", "user"),
+        ("moderator", "moderator"),
+        ("admin", "admin"),
+    )
+    email = models.EmailField(blank=False, unique=True)
+    bio = models.TextField(blank=True)
+    role = models.CharField(
+        max_length=25, choices=USER_ROLES, default="user")
+    confirmation_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
+
+    def __str__(self):
+        return self.username
+        
 
 
 class Category(models.Model):
@@ -51,9 +69,3 @@ class Comments(models.Model):
         related_name="comment_author") 
     pub_date = models.DateTimeField(verbose_name="date published", 
         auto_now_add=True)     
-
-
-    
-
-
-
