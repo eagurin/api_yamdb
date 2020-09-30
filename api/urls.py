@@ -9,6 +9,7 @@ router.register('titles', TitleViewSet, basename='Title')
 router.register(r'titles/(?P<title_id>[0-9]+)/reviews', ReviewsViewSet)
 router.register(r'titles/(?P<title_id>[0-9]+)/reviews/(?P<review_id>[0-9]+)/comments', CommentsViewSet)
 
+
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/genres/',
