@@ -10,6 +10,7 @@ router.register(r'titles/(?P<title_id>[0-9]+)/reviews', ReviewsViewSet)
 router.register(r'titles/(?P<title_id>[0-9]+)/reviews/(?P<review_id>[0-9]+)/comments', CommentsViewSet)
 router.register(r'users', UserViewSet, basename="users")
 
+
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
