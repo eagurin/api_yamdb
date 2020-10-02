@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
@@ -43,7 +44,15 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     pagination_class = PageNumberPagination
-    #filterset_class = TitleFilter
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitleFilter
+
+    def perform_update(self, serializer):
+        category = get_object_or_404(
+            Category,
+            slug=self.request.data.get("category"))
+
+        serializer.save(category=category)
 
     def perform_create(self, serializer):
         category = Category.objects.get(slug=self.request.data.get("category"))
