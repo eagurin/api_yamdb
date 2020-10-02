@@ -5,17 +5,23 @@ from .models import Genre, Title
 
 
 class TitleFilter(filters.FilterSet):
+    genre = filters.CharFilter(
+        field_name='genre__slug', lookup_expr='iexact'
+    )
+
+    category = filters.CharFilter(
+        field_name='category__slug', lookup_expr='iexact'
+    )
+
+    year = filters.NumberFilter(
+        field_name='year', lookup_expr='iexact'
+    )
+
+    name = filters.CharFilter(
+        field_name='name', lookup_expr='contains'
+    )
+
     class Meta:
         model = Title
-        fields = ['genre']
+        fields = ['genre', 'category', 'year', 'name']
 
-    @property
-    def qs(self):
-        queryset = super().qs
-
-        genre_slug = self.request.query_params.get('genre', None)
-        if genre_slug is not None:
-            genre = get_object_or_404(Genre, slug=genre_slug)
-            queryset = queryset.filter(genre=genre)
-
-        return queryset
