@@ -28,6 +28,7 @@ def main():
         'api_category': 'data/category.csv',
         'api_reviews': 'data/review.csv',
         'api_comments': 'data/comments.csv',
+        'api_users': 'data/user.csv',
     }
 
     for key, value in tables.items():
