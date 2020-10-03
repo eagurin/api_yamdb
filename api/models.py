@@ -63,6 +63,9 @@ class Reviews(models.Model):
     )
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-id']
 
 
 class Comments(models.Model):
