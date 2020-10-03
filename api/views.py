@@ -1,19 +1,18 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets, permissions
-from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-##from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, mixins, status, viewsets, permissions
-from rest_framework.response import Response
-
-
-from .serializers import *
-from .permissions import (IsAdminUser, IsAdminOrReadOnlyPermission, IsAuthorOrAdminOrModerator)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .utils import CreateListViewSet
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
 from .filters import TitleFilter
-from .models import Genre, Category, Title, Reviews, Comments
+from .models import Category, Comments, Genre, Reviews, Title, User
+from .permissions import (IsAdminOrReadOnlyPermission, IsAdminUser,
+                          IsAuthorOrAdminOrModerator, IsOwnerOrReadOnly)
+from .serializers import *
+from .utils import CreateListViewSet
 
 
 class GenreViewSet(CreateListViewSet):
@@ -53,7 +52,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         category = Category.objects.get(slug=self.request.data.get("category"))
-        genres = Genre.objects.filter(slug__in=self.request.data.getlist("genre"))
+        genres = Genre.objects.filter(
+            slug__in=self.request.data.getlist("genre"))
 
         serializer.save(category=category, genre=genres)
 
@@ -61,7 +61,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     queryset = Reviews.objects.all()
     serializer_class = ReviewsSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator)
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -72,7 +72,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     queryset = Comments.objects.all()
     serializer_class = CommentsSerializer
-    permission_classes = (IsAuthorOrAdminOrModerator, IsAuthenticatedOrReadOnly)
+    permission_classes = [
+        IsAuthorOrAdminOrModerator, IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         review = get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
@@ -86,5 +87,16 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     permission_classes = [IsAdminUser]
     filter_backends = [filters.SearchFilter]
-    search_fields = ["name", ]
+    search_fields = ["=name", ]
     lookup_field = "username"
+
+    @action(detail=False,
+            permission_classes=[permissions.IsAuthenticated],
+            methods=['PATCH', 'GET']
+            )
+    def me(self, request, *args, **kwargs):
+        serializer = UserSerializer(
+            request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        return Response(serializer.data)

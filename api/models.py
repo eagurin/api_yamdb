@@ -1,9 +1,7 @@
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import PermissionsMixin
 from django.conf import settings
-
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 
 class User(AbstractUser):
@@ -12,15 +10,21 @@ class User(AbstractUser):
         ("moderator", "moderator"),
         ("admin", "admin"),
     )
-    email = models.EmailField(blank=False, unique=True)
+    email = models.EmailField(
+        help_text='email address', blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=25, choices=USER_ROLES, default="user")
-    confirmation_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    confirmation_code = models.CharField(
+        max_length=100, unique=True, blank=True, null=True)
+    username = models.CharField(
+        max_length=30, unique=True, blank=True, null=True)
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.username
-        
+        return self.email
 
 
 class Category(models.Model):
@@ -49,23 +53,23 @@ class Title(models.Model):
 
 class Reviews(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
-        related_name="review_title")
+                              related_name="review_title")
     text = models.TextField(verbose_name="Отзыв")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-        related_name="review_author")
+                               related_name="review_author")
     score = models.IntegerField(
-        validators =[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Оценка"
     )
-    pub_date = models.DateTimeField(verbose_name="date published", 
-        auto_now_add=True)
+    pub_date = models.DateTimeField(verbose_name="date published",
+                                    auto_now_add=True)
 
 
 class Comments(models.Model):
     review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
-        related_name="comment_review")
+                               related_name="comment_review")
     text = models.TextField(verbose_name="Комментарий")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-        related_name="comment_author") 
-    pub_date = models.DateTimeField(verbose_name="date published", 
-        auto_now_add=True)     
+                               related_name="comment_author")
+    pub_date = models.DateTimeField(verbose_name="date published",
+                                    auto_now_add=True)
