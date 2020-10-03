@@ -18,9 +18,20 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-
     class Meta:
         fields = '__all__'
+        model = Title
+
+
+class TitleSerializerRating(serializers.ModelSerializer):
+    category = CategorySerializer(many=False, read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, Title):
+        return Title.rating
+    class Meta:
+        fields = ('id', 'category', 'genre', 'name', 'year', 'description', 'rating')
         model = Title
 
 
@@ -29,7 +40,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Reviews
 
 
@@ -38,7 +49,7 @@ class CommentsSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comments
 
 

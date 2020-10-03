@@ -1,3 +1,5 @@
+from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status, viewsets
@@ -5,6 +7,8 @@ from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException,ParseError
+from rest_framework.views import exception_handler
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from .filters import TitleFilter
@@ -37,11 +41,15 @@ class CategoryViewSet(CreateListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnlyPermission, ]
-    queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    queryset = Title.objects.all().annotate(rating=Avg('review_title__score'))
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return TitleSerializerRating
+        return TitleSerializer
 
     def perform_update(self, serializer):
         category = get_object_or_404(
@@ -61,7 +69,15 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewsViewSet(viewsets.ModelViewSet):
     queryset = Reviews.objects.all()
     serializer_class = ReviewsSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
+    pagination_class = PageNumberPagination
+
+    def perform_create(self, serializer):  
+        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        try:
+            serializer.save(author=self.request.user, title=title) 
+        except IntegrityError:
+            raise ParseError(detail="Ошибка уникальности")
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -72,8 +88,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     queryset = Comments.objects.all()
     serializer_class = CommentsSerializer
-    permission_classes = [
-        IsAuthorOrAdminOrModerator, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
+    pagination_class = PageNumberPagination
+
+    def perform_create(self, serializer):  
+        review = get_object_or_404(Reviews, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review) 
 
     def get_queryset(self):
         review = get_object_or_404(Reviews, id=self.kwargs.get('review_id'))

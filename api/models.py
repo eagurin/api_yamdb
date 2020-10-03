@@ -44,7 +44,7 @@ class Title(models.Model):
         verbose_name="Год выпуска"
     )
     description = models.TextField(null=True, blank=True)
-    rating = models.IntegerField(blank=True, null=True)
+    #rating = models.IntegerField(blank=True, null=True)
     genre = models.ManyToManyField(Genre, verbose_name='genre')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  blank=True, null=True,
@@ -63,6 +63,10 @@ class Reviews(models.Model):
     )
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
+    
+    class Meta:
+        unique_together=['author', 'title']
+        ordering = ['-id']
 
 
 class Comments(models.Model):
@@ -73,3 +77,6 @@ class Comments(models.Model):
                                related_name="comment_author")
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']

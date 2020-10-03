@@ -7,17 +7,14 @@ from api.views import *
 
 router = DefaultRouter()
 router.register('users', UserViewSet)
-
-router.register('titles', TitleViewSet)
-
-router.register('genres', GenreViewSet)
-router.register('categories', CategoryViewSet)
-
 router.register(r'titles/(?P<title_id>[0-9]+)/reviews', ReviewsViewSet)
 router.register(
     r'titles/(?P<title_id>[0-9]+)/reviews/(?P<review_id>[0-9]+)/comments',
     CommentsViewSet
 )
+router.register('titles', TitleViewSet)
+router.register('genres', GenreViewSet)
+router.register('categories', CategoryViewSet)
 
 
 urlpatterns = [
