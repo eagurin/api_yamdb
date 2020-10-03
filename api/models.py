@@ -65,6 +65,7 @@ class Reviews(models.Model):
                                     auto_now_add=True)
     
     class Meta:
+        unique_together=['author', 'title']
         ordering = ['-id']
 
 
@@ -76,3 +77,6 @@ class Comments(models.Model):
                                related_name="comment_author")
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
