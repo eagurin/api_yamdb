@@ -18,6 +18,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
+
     class Meta:
         fields = '__all__'
         model = Title
@@ -30,8 +31,10 @@ class TitleSerializerRating(serializers.ModelSerializer):
 
     def get_rating(self, Title):
         return Title.rating
+
     class Meta:
-        fields = ('id', 'category', 'genre', 'name', 'year', 'description', 'rating')
+        fields = ('id', 'category', 'genre', 'name',
+                  'year', 'description', 'rating')
         model = Title
 
 
@@ -58,3 +61,15 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("first_name", "last_name",
                   "username", "bio", "email", "role")
         model = User
+
+
+class TokenSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True)
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email',)
