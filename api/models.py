@@ -4,20 +4,21 @@ from django.db import models
 
 
 class User(AbstractUser):
-    USER_ROLES = (
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
-    )
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    UserRole = [
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+    ]
     email = models.EmailField(
         help_text='email address', blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
-        max_length=25, choices=USER_ROLES, default="user")
+        max_length=25, choices=UserRole, default=USER)
     confirmation_code = models.CharField(
         max_length=100, unique=True, blank=True, null=True)
-    username = models.CharField(
-        max_length=30, unique=True, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -62,9 +63,9 @@ class Reviews(models.Model):
     )
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
-    
+
     class Meta:
-        unique_together=['author', 'title']
+        unique_together = ['author', 'title']
         ordering = ['-id']
 
 
