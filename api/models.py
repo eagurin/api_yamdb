@@ -51,7 +51,7 @@ class Title(models.Model):
                                  verbose_name="Категория")
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
                               related_name="review_title")
     text = models.TextField(verbose_name="Отзыв")
@@ -69,8 +69,8 @@ class Reviews(models.Model):
         ordering = ['-id']
 
 
-class Comments(models.Model):
-    review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
+class Comment(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE,
                                related_name="comment_review")
     text = models.TextField(verbose_name="Комментарий")
     author = models.ForeignKey(User, on_delete=models.CASCADE,

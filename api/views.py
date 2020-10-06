@@ -17,11 +17,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
 
 from .filters import TitleFilter
-from .models import Category, Comments, Genre, Reviews, Title, User
+from .models import Category, Comment, Genre, Review, Title, User
 from .permissions import (IsAdminOrReadOnlyPermission, IsAdminUser,
                           IsAuthorOrAdminOrModerator)
-from .serializers import (CategorySerializer, CommentsSerializer,
-                          GenreSerializer, ReviewsSerializer, SignUpSerializer,
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, SignUpSerializer,
                           TitleSerializer, TitleSerializerRating,
                           TokenSerializer, UserSerializer)
 from .utils import CreateListViewSet
@@ -76,19 +76,16 @@ class TitleViewSet(viewsets.ModelViewSet):
         serializer.save(category=category, genre=genres)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
-    queryset = Reviews.objects.all()
-    serializer_class = ReviewsSerializer
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
     permission_classes = [
         IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        try:
-            serializer.save(author=self.request.user, title=title)
-        except IntegrityError:
-            raise ParseError(detail="Ошибка уникальности")
+        serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -96,19 +93,19 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return reviews
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
-    queryset = Comments.objects.all()
-    serializer_class = CommentsSerializer
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
     permission_classes = [
         IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
     pagination_class = PageNumberPagination
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Reviews, pk=self.kwargs['review_id'])
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         serializer.save(author=self.request.user, review=review)
 
     def get_queryset(self):
-        review = get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         comments = review.comment_review.all()
         return comments
 
