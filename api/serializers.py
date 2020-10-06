@@ -1,6 +1,7 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from .models import Category, Comments, Genre, Reviews, Title, User
+from .models import Category, Comment, Genre, Review, Title, User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -18,6 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=False, read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
+
     class Meta:
         fields = '__all__'
         model = Title
@@ -30,27 +32,40 @@ class TitleSerializerRating(serializers.ModelSerializer):
 
     def get_rating(self, Title):
         return Title.rating
+
     class Meta:
-        fields = ('id', 'category', 'genre', 'name', 'year', 'description', 'rating')
+        fields = ('id', 'category', 'genre', 'name',
+                  'year', 'description', 'rating')
         model = Title
 
 
-class ReviewsSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(many=False, read_only=True,
                                           slug_field='username')
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        model = Reviews
+        model = Review
+        validators = []
+
+    def validate(self, data):
+        if self.context['view'].action == 'create':
+            title = get_object_or_404(Title, pk=self.context['view'].kwargs[
+                'title_id'])
+            user = self.context['request'].user
+
+            if Review.objects.filter(author=user).filter(title=title).exists():
+                raise serializers.ValidationError("Uniq error")
+        return data
 
 
-class CommentsSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(many=False, read_only=True,
                                           slug_field='username')
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
-        model = Comments
+        model = Comment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -58,3 +73,15 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("first_name", "last_name",
                   "username", "bio", "email", "role")
         model = User
+
+
+class TokenSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True)
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email',)

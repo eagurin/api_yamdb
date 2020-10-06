@@ -1,21 +1,29 @@
+import uuid
+
+from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, permissions, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ParseError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException,ParseError
-from rest_framework.views import exception_handler
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
 
 from .filters import TitleFilter
-from .models import Category, Comments, Genre, Reviews, Title, User
+from .models import Category, Comment, Genre, Review, Title, User
 from .permissions import (IsAdminOrReadOnlyPermission, IsAdminUser,
-                          IsAuthorOrAdminOrModerator, IsOwnerOrReadOnly)
-from .serializers import *
+                          IsAuthorOrAdminOrModerator)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, SignUpSerializer,
+                          TitleSerializer, TitleSerializerRating,
+                          TokenSerializer, UserSerializer)
 from .utils import CreateListViewSet
 
 
@@ -59,25 +67,25 @@ class TitleViewSet(viewsets.ModelViewSet):
         serializer.save(category=category)
 
     def perform_create(self, serializer):
-        category = Category.objects.get(slug=self.request.data.get("category"))
+        category = Category.objects.get(
+            slug=self.request.data.get("category")
+        )
         genres = Genre.objects.filter(
             slug__in=self.request.data.getlist("genre"))
 
         serializer.save(category=category, genre=genres)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
-    queryset = Reviews.objects.all()
-    serializer_class = ReviewsSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [
+        IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
     pagination_class = PageNumberPagination
 
-    def perform_create(self, serializer):  
+    def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        try:
-            serializer.save(author=self.request.user, title=title) 
-        except IntegrityError:
-            raise ParseError(detail="Ошибка уникальности")
+        serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -85,18 +93,19 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         return reviews
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
-    queryset = Comments.objects.all()
-    serializer_class = CommentsSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [
+        IsAuthenticatedOrReadOnly, IsAuthorOrAdminOrModerator]
     pagination_class = PageNumberPagination
 
-    def perform_create(self, serializer):  
-        review = get_object_or_404(Reviews, pk=self.kwargs['review_id'])
-        serializer.save(author=self.request.user, review=review) 
+    def perform_create(self, serializer):
+        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=review)
 
     def get_queryset(self):
-        review = get_object_or_404(Reviews, id=self.kwargs.get('review_id'))
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         comments = review.comment_review.all()
         return comments
 
@@ -120,3 +129,55 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
         return Response(serializer.data)
+
+
+class EmailSignUpView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.data.get('email')
+            confirmation_code = uuid.uuid4()
+            User.objects.create(
+                email=email, username=str(email),
+                confirmation_code=confirmation_code,
+                is_active=False
+            )
+            send_mail(
+                'Подтверждение аккаунта',
+                f'Ваш ключ активации {confirmation_code}',
+                NOREPLY_YAMDB_EMAIL,
+                [email],
+                fail_silently=True,
+            )
+            return Response(
+                {'result': 'Код подтверждения отправлен на вашу почту'},
+                status=200
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CodeConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, *args, **kwargs):
+        serializer = TokenSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = User.objects.get(
+                email=serializer.data['email'],
+                confirmation_code=serializer.data['confirmation_code']
+            )
+        except User.DoesNotExist:
+            return Response(
+                data={'detail': 'Invalid email or code'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            user.is_active = True
+            user.save()
+            refresh_token = RefreshToken.for_user(user)
+            return Response({
+                'token': str(refresh_token.access_token)
+            })

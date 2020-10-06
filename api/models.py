@@ -1,24 +1,24 @@
-from django.conf import settings
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
 class User(AbstractUser):
-    USER_ROLES = (
-        ("user", "user"),
-        ("moderator", "moderator"),
-        ("admin", "admin"),
-    )
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    UserRole = [
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
+    ]
     email = models.EmailField(
         help_text='email address', blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
-        max_length=25, choices=USER_ROLES, default="user")
+        max_length=25, choices=UserRole, default=USER)
     confirmation_code = models.CharField(
         max_length=100, unique=True, blank=True, null=True)
-    username = models.CharField(
-        max_length=30, unique=True, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -51,7 +51,7 @@ class Title(models.Model):
                                  verbose_name="Категория")
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
                               related_name="review_title")
     text = models.TextField(verbose_name="Отзыв")
@@ -63,14 +63,14 @@ class Reviews(models.Model):
     )
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
-    
+
     class Meta:
-        unique_together=['author', 'title']
+        unique_together = ['author', 'title']
         ordering = ['-id']
 
 
-class Comments(models.Model):
-    review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
+class Comment(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE,
                                related_name="comment_review")
     text = models.TextField(verbose_name="Комментарий")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
