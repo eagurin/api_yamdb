@@ -4,16 +4,16 @@ from django.db import models
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
+    USER = "user"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
     UserRole = [
-        (USER, 'user'),
-        (ADMIN, 'admin'),
-        (MODERATOR, 'moderator'),
+        (USER, "user"),
+        (ADMIN, "admin"),
+        (MODERATOR, "moderator"),
     ]
     email = models.EmailField(
-        help_text='email address', blank=False, unique=True)
+        help_text="email address", blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=25, choices=UserRole, default=USER)
@@ -44,8 +44,7 @@ class Title(models.Model):
         verbose_name="Год выпуска"
     )
     description = models.TextField(null=True, blank=True)
-    #rating = models.IntegerField(blank=True, null=True)
-    genre = models.ManyToManyField(Genre, verbose_name='genre')
+    genre = models.ManyToManyField(Genre, verbose_name="genre")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  blank=True, null=True,
                                  verbose_name="Категория")
@@ -65,8 +64,8 @@ class Review(models.Model):
                                     auto_now_add=True)
 
     class Meta:
-        unique_together = ['author', 'title']
-        ordering = ['-id']
+        unique_together = ["author", "title"]
+        ordering = ["-pub_date"]
 
 
 class Comment(models.Model):
@@ -79,4 +78,5 @@ class Comment(models.Model):
                                     auto_now_add=True)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-pub_date"]
+        
