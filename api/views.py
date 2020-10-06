@@ -49,7 +49,7 @@ class CategoryViewSet(CreateListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnlyPermission, ]
-    queryset = Title.objects.all().annotate(rating=Avg('review_title__score'))
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
@@ -89,7 +89,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        reviews = title.review_title.all()
+        reviews = title.reviews.all()
         return reviews
 
 
