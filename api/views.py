@@ -14,11 +14,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
+
 from .filters import TitleFilter
 from .models import Category, Comments, Genre, Reviews, Title, User
 from .permissions import (IsAdminOrReadOnlyPermission, IsAdminUser,
                           IsAuthorOrAdminOrModerator)
-from .serializers import *
+from .serializers import (CategorySerializer, CommentsSerializer,
+                          GenreSerializer, ReviewsSerializer, SignUpSerializer,
+                          TitleSerializer, TitleSerializerRating,
+                          TokenSerializer, UserSerializer)
 from .utils import CreateListViewSet
 
 
@@ -138,19 +143,19 @@ class EmailSignUpView(APIView):
             email = serializer.data.get('email')
             confirmation_code = uuid.uuid4()
             User.objects.create(
-                email=email, username=str(email), 
-                confirmation_code=confirmation_code, 
+                email=email, username=str(email),
+                confirmation_code=confirmation_code,
                 is_active=False
             )
             send_mail(
                 'Подтверждение аккаунта',
-                'Ваш ключ активации {}'.format(confirmation_code),
-                'from@example.com',
+                f'Ваш ключ активации {confirmation_code}',
+                NOREPLY_YAMDB_EMAIL,
                 [email],
                 fail_silently=True,
             )
             return Response(
-                {'result': 'Код подтверждения отправлен на вашу почту'}, 
+                {'result': 'Код подтверждения отправлен на вашу почту'},
                 status=200
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -164,7 +169,7 @@ class CodeConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             user = User.objects.get(
-                email=serializer.data['email'], 
+                email=serializer.data['email'],
                 confirmation_code=serializer.data['confirmation_code']
             )
         except User.DoesNotExist:
