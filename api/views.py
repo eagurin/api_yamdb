@@ -139,26 +139,25 @@ class EmailSignUpView(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.data.get('email')
-            confirmation_code = uuid.uuid4()
-            User.objects.create(
-                email=email, username=str(email),
-                confirmation_code=confirmation_code,
-                is_active=False
-            )
-            send_mail(
-                'Подтверждение аккаунта',
-                f'Ваш ключ активации {confirmation_code}',
-                NOREPLY_YAMDB_EMAIL,
-                [email],
-                fail_silently=True,
-            )
-            return Response(
-                {'result': 'Код подтверждения отправлен на вашу почту'},
-                status=200
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data('email')
+        confirmation_code = uuid.uuid4()
+        User.objects.get_or_create(
+            email=email, username=email,
+            confirmation_code=confirmation_code,
+            is_active=False
+        )
+        send_mail(
+            'Подтверждение аккаунта',
+            f'Ваш ключ активации {confirmation_code}',
+            NOREPLY_YAMDB_EMAIL,
+            [email],
+            fail_silently=True,
+        )
+        return Response(
+            {'result': 'Код подтверждения отправлен на вашу почту'},
+            status=200
+        )
 
 
 class CodeConfirmView(APIView):
@@ -169,12 +168,12 @@ class CodeConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             user = User.objects.get(
-                email=serializer.data['email'],
-                confirmation_code=serializer.data['confirmation_code']
+                email=serializer.data('email'),
+                confirmation_code=serializer.data('confirmation_code')
             )
         except User.DoesNotExist:
             return Response(
-                data={'detail': 'Invalid email or code'},
+                data={'detail': 'Неверный адрес электронной почты или код'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         else:
