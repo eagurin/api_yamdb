@@ -44,8 +44,8 @@ class ReviewSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        ##fields = ('id', 'text', 'author', 'score', 'pub_date')
-        fields = ('__all__')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        ##fields = ('__all__')
         model = Review
         validators = []
 
