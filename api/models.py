@@ -4,16 +4,16 @@ from django.db import models
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
+    USER = "user"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
     UserRole = [
-        (USER, 'user'),
-        (ADMIN, 'admin'),
-        (MODERATOR, 'moderator'),
+        (USER, "user"),
+        (ADMIN, "admin"),
+        (MODERATOR, "moderator"),
     ]
     email = models.EmailField(
-        help_text='email address', blank=False, unique=True)
+        help_text="email address", blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=25, choices=UserRole, default=USER)
@@ -44,19 +44,18 @@ class Title(models.Model):
         verbose_name="Год выпуска"
     )
     description = models.TextField(null=True, blank=True)
-    #rating = models.IntegerField(blank=True, null=True)
-    genre = models.ManyToManyField(Genre, verbose_name='genre')
+    genre = models.ManyToManyField(Genre, verbose_name="genre")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL,
                                  blank=True, null=True,
                                  verbose_name="Категория")
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
-                              related_name="review_title")
+                              related_name="reviews")
     text = models.TextField(verbose_name="Отзыв")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-                               related_name="review_author")
+                               related_name="reviews")
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name="Оценка"
@@ -65,18 +64,19 @@ class Reviews(models.Model):
                                     auto_now_add=True)
 
     class Meta:
-        unique_together = ['author', 'title']
-        ordering = ['-id']
+        unique_together = ["author", "title"]
+        ordering = ["-pub_date"]
 
 
-class Comments(models.Model):
-    review = models.ForeignKey(Reviews, on_delete=models.CASCADE,
-                               related_name="comment_review")
+class Comment(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE,
+                               related_name="comments")
     text = models.TextField(verbose_name="Комментарий")
     author = models.ForeignKey(User, on_delete=models.CASCADE,
-                               related_name="comment_author")
+                               related_name="comments")
     pub_date = models.DateTimeField(verbose_name="date published",
                                     auto_now_add=True)
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-pub_date"]
+        
