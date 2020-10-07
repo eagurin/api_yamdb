@@ -28,24 +28,20 @@ class TitleSerializer(serializers.ModelSerializer):
 class TitleSerializerRating(serializers.ModelSerializer):
     category = CategorySerializer(many=False, read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, Title):
-        return Title.rating
+    rating = serializers.IntegerField()
 
     class Meta:
-        fields = ('id', 'category', 'genre', 'name',
-                  'year', 'description', 'rating')
+        fields = '__all__'
         model = Title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(many=False, read_only=True,
                                           slug_field='username')
+    title = TitleSerializer(many=False, read_only=True)
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        ##fields = ('__all__')
+        fields = '__all__'
         model = Review
         validators = []
 
