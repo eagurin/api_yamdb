@@ -1,13 +1,11 @@
 import uuid
 
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ParseError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -137,9 +135,9 @@ class EmailSignUpView(APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.data('email')
+        email = serializer.data.get('email')
         confirmation_code = uuid.uuid4()
-        User.objects.get_or_create(
+        User.objects.create(
             email=email, username=email,
             confirmation_code=confirmation_code,
             is_active=False
@@ -160,23 +158,11 @@ class EmailSignUpView(APIView):
 class CodeConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    def post(self, *args, **kwargs):
-        serializer = TokenSerializer(data=self.request.data)
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('confirmation_code')
+        serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            user = User.objects.get(
-                email=serializer.data('email'),
-                confirmation_code=serializer.data('confirmation_code')
-            )
-        except User.DoesNotExist:
-            return Response(
-                data={'detail': 'Неверный адрес электронной почты или код'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
-            user.is_active = True
-            user.save()
-            refresh_token = RefreshToken.for_user(user)
-            return Response({
-                'token': str(refresh_token.access_token)
-            })
+        user = get_object_or_404(User, email=email)
+        refresh = RefreshToken.for_user(user)
+        return Response({'token': str(refresh.access_token)})
