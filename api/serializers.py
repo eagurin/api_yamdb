@@ -38,10 +38,10 @@ class TitleSerializerRating(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(many=False, read_only=True,
                                           slug_field='username')
+    title = TitleSerializer(many=False, read_only=True)
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        ##fields = ('__all__')
+        fields = '__all__'
         model = Review
         validators = []
 
