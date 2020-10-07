@@ -49,7 +49,7 @@ class CategoryViewSet(CreateListViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnlyPermission, ]
-    queryset = Title.objects.all().annotate(rating=Avg('review_title__score'))
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
@@ -89,7 +89,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        reviews = title.review_title.all()
+        reviews = title.reviews.all()
         return reviews
 
 
@@ -106,7 +106,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        comments = review.comment_review.all()
+        comments = review.comments.all()
         return comments
 
 
@@ -136,26 +136,25 @@ class EmailSignUpView(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.data.get('email')
-            confirmation_code = uuid.uuid4()
-            User.objects.create(
-                email=email, username=str(email),
-                confirmation_code=confirmation_code,
-                is_active=False
-            )
-            send_mail(
-                'Подтверждение аккаунта',
-                f'Ваш ключ активации {confirmation_code}',
-                NOREPLY_YAMDB_EMAIL,
-                [email],
-                fail_silently=True,
-            )
-            return Response(
-                {'result': 'Код подтверждения отправлен на вашу почту'},
-                status=200
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data('email')
+        confirmation_code = uuid.uuid4()
+        User.objects.get_or_create(
+            email=email, username=email,
+            confirmation_code=confirmation_code,
+            is_active=False
+        )
+        send_mail(
+            'Подтверждение аккаунта',
+            f'Ваш ключ активации {confirmation_code}',
+            NOREPLY_YAMDB_EMAIL,
+            [email],
+            fail_silently=True,
+        )
+        return Response(
+            {'result': 'Код подтверждения отправлен на вашу почту'},
+            status=200
+        )
 
 
 class CodeConfirmView(APIView):
@@ -166,12 +165,12 @@ class CodeConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             user = User.objects.get(
-                email=serializer.data['email'],
-                confirmation_code=serializer.data['confirmation_code']
+                email=serializer.data('email'),
+                confirmation_code=serializer.data('confirmation_code')
             )
         except User.DoesNotExist:
             return Response(
-                data={'detail': 'Invalid email or code'},
+                data={'detail': 'Неверный адрес электронной почты или код'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         else:
