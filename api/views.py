@@ -22,8 +22,9 @@ from .permissions import (IsAdminOrReadOnlyPermission, IsAdminUser,
                           IsAuthorOrAdminOrModerator)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, SignUpSerializer,
-                          TitleSerializer, TitleSerializerRating,
-                          TokenSerializer, UserSerializer)
+                          TitleSerializer,
+                          TokenSerializer, UserSerializer,
+                          TitleSerializerRating)
 from .utils import CreateListViewSet
 
 
