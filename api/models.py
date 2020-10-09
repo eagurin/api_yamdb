@@ -24,7 +24,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.email
+        return self.username
 
 
 class Category(models.Model):
@@ -79,4 +79,3 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["-pub_date"]
-        
